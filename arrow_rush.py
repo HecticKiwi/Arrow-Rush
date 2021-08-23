@@ -33,24 +33,36 @@ class PlayButton(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load("data\\" + "play_button.png")
         self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT*3/4))
+        self.width, self.height = self.rect.width, self.rect.height
         self.mask = pygame.mask.from_surface(self.image)
         self.brightness = 0
-        # self.image.fill((50,50,50), special_flags=BLEND_RGB_ADD)
+        self.brightness_cap = 25
+        self.size = 1
+        self.size_cap = 1.05
 
-    def update(self):
+    def is_selected(self) -> bool:
         x, y = pygame.mouse.get_pos()
         pos_in_mask = x - self.rect.x, y - self.rect.y
-        touching = self.rect.collidepoint((x, y)) and self.mask.get_at(pos_in_mask)
+        return self.rect.collidepoint((x, y)) and self.mask.get_at(pos_in_mask)
 
-        self.new_image = self.image.copy()
-
-        if touching:
-            self.brightness += 3 if self.brightness < 25 else 0
+    def update(self):
+        if self.is_selected():
+            self.brightness += 3 if self.brightness < self.brightness_cap else 0
+            self.size += (self.size_cap - self.size) / 5
         else:
             self.brightness -= 3 if self.brightness > 0 else 0
+            self.size += (1 - self.size) / 5
 
+        self.new_image = self.image.copy()
+        self.new_image = pygame.transform.smoothscale(self.new_image, (round(self.width*self.size), round(self.height*self.size)))
         self.new_image.fill(tuple(num + self.brightness for num in BLACK), special_flags=BLEND_RGB_ADD)
-        screen.blit(self.new_image, self.rect)
+
+        self.new_rect = self.new_image.get_rect(center=(WIDTH/2, HEIGHT*3/4))
+
+        screen.blit(self.new_image, self.new_rect)
+
+    def play(self):
+        pass
 
 
 clock = pygame.time.Clock()
@@ -58,12 +70,15 @@ clock = pygame.time.Clock()
 title = Title()
 play_button = PlayButton()
 
-done = False
+running = True
 
-while not done:
+while running:
     for event in pygame.event.get():
         if event.type == QUIT:
-            done = True
+            running = False
+        if event.type == MOUSEBUTTONDOWN:
+            if play_button.is_selected():
+                play_button.play()
 
     screen.blit(background, (0,0))
     
