@@ -28,9 +28,16 @@ class Title(pygame.sprite.Sprite):
 
         screen.blit(self.image, self.rect)
 
+class PlayButton(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("data\\" + "play_button.jpg")
+
+
 clock = pygame.time.Clock()
 
 title = Title()
+play_button = PlayButton()
 
 done = False
 
@@ -42,8 +49,6 @@ while not done:
     screen.blit(background, (0,0))
     
     title.update()
-
-    pygame.draw.polygon(screen, BLACK, 3)
 
     pygame.display.update()
     clock.tick(60)
