@@ -45,17 +45,18 @@ class Text(pygame.sprite.Sprite):
         self.original = self.font.render(text, True, BLACK)
         self.image = self.original.copy()
 
-class PlayButton(pygame.sprite.Sprite):
-    def __init__(self):
+class Button(pygame.sprite.Sprite):
+    def __init__(self, file, center=(0,0), visible=True):
         super().__init__()
 
-        self.image = pygame.image.load("data\\" + "play_button.png")
-        self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT*3/4))
+        self.image = pygame.image.load("data\\" + file)
+        self.center = center
+        self.rect = self.image.get_rect(center=self.center)
         self.width, self.height = self.rect.width, self.rect.height
         self.mask = pygame.mask.from_surface(self.image)
         self.brightness, self.brightness_cap = 0, 25
         self.size, self.size_cap = 1, 1.05
-        self.visible = True
+        self.visible = visible
 
     def is_selected(self) -> bool:
         x, y = pygame.mouse.get_pos()
@@ -77,7 +78,7 @@ class PlayButton(pygame.sprite.Sprite):
             self.new_image.fill(
                 tuple(num + self.brightness for num in BLACK), special_flags=BLEND_RGB_ADD)
             self.new_rect = self.new_image.get_rect(
-                center=(WIDTH/2, HEIGHT*3/4))
+                center=self.center)
 
             screen.blit(self.new_image, self.new_rect)
 
@@ -116,7 +117,7 @@ class Arrows(pygame.sprite.Sprite):
         if self.visible:
             screen.blit(self.image, self.rect)
 
-    def test_input(self, key):
+    def handle_input(self, key):
         if self.direction == key:
             global score
             score += 1
@@ -124,6 +125,8 @@ class Arrows(pygame.sprite.Sprite):
             self.refresh_arrow()
             score_text.set_text(f"Score: {score}")
             time_meter.meter = 1
+        else:
+            time_meter.meter -= 0.3 if time_meter.meter > 0.3 else time_meter.meter
 
 
 class TimeMeter(pygame.sprite.Sprite):
@@ -157,12 +160,17 @@ class TimeMeter(pygame.sprite.Sprite):
 
 clock = pygame.time.Clock()
 
-title = Text("Arrow Rush", size=50, center=(WIDTH/2, HEIGHT/4), wobble=False, visible=True)
+title = Text("Arrow Rush", size=50, center=(WIDTH/2, HEIGHT/4), wobble=True, visible=True)
 score_text = Text(f"Score: {score}", size=35, center=(WIDTH/2, HEIGHT/2), wobble=False, visible=False)
+game_over_text = Text("Game Over...", size=50, center=(WIDTH/2, HEIGHT/4), wobble=True, visible=False)
 
-text_sprites = pygame.sprite.Group(title, score_text)
+text_sprites = pygame.sprite.Group(title, score_text, game_over_text)
 
-play_button = PlayButton()
+play_button = Button("play_button.png", center=(WIDTH/2, HEIGHT*3/4), visible=True)
+retry_button = Button("retry_button.png", center=(WIDTH/2, HEIGHT*3/4), visible=False)
+
+button_sprites = pygame.sprite.Group(play_button, retry_button)
+
 arrows = Arrows()
 time_meter = TimeMeter()
 
@@ -180,19 +188,32 @@ while running:
                 title.visible = False
                 arrows.visible = True
                 time_meter.visible = True
-                score_text.visible = True
                 game_active = True
-        if event.type == KEYDOWN and game_active == True:
-            arrows.test_input(event.key)
-        if event.type == GAME_OVER:
+            elif retry_button.is_selected() and retry_button.visible == True:
+                retry_button.visible = False
+                arrows.visible = True
+                score = 0
+                time_meter.meter = 1
+                time_meter.visible = True
+                game_active = True
 
+                game_over_text.visible = False
+                score_text.visible = False
+        if event.type == KEYDOWN and game_active == True:
+            arrows.handle_input(event.key)
+        if event.type == GAME_OVER:
             arrows.visible = False
             time_meter.visible = False
+            game_active = False
+
+            score_text.visible = True
+            game_over_text.visible = True
+            retry_button.visible = True
 
     screen.blit(background, (0, 0))
 
     text_sprites.update()
-    play_button.update()
+    button_sprites.update()
     arrows.update()
     time_meter.update()
 
