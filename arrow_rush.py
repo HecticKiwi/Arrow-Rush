@@ -12,11 +12,12 @@ RED = (255, 0, 0)
 GAME_OVER = USEREVENT + 1
 
 game_active = False
-
 pygame.init()
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 background = pygame.image.load("data\\" + "background.jpg")
+
+score = 0
 
 
 class Text(pygame.sprite.Sprite):
@@ -96,7 +97,7 @@ class Arrows(pygame.sprite.Sprite):
             K_RIGHT: 0
         }
         self.visible = False
-
+    
     def refresh_arrow(self):
         self.color = "red" if random.randrange(0, 3) == 1 else "black"
 
@@ -108,7 +109,7 @@ class Arrows(pygame.sprite.Sprite):
         self.direction = self.directions[random.randrange(0, 4)]
         self.image = pygame.transform.rotate(
             self.image, self.rotations[self.direction] if self.color == "black" else self.rotations[self.direction] + 180)
-        self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT/2))
+        self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT*2/5))
 
     def update(self):
         if self.visible:
@@ -116,17 +117,11 @@ class Arrows(pygame.sprite.Sprite):
 
     def test_input(self, key):
         if self.direction == key:
-            score.score += 1
-            print(score.score)
-
+            global score
+            score += 1
+            print(score)
             self.refresh_arrow()
             time_meter.meter = 1
-
-
-class Score(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.score = 0
 
 
 class TimeMeter(pygame.sprite.Sprite):
@@ -146,9 +141,10 @@ class TimeMeter(pygame.sprite.Sprite):
 
     def update(self):
         if self.visible:
+            global score
             self.inner_rect.width = 390 * self.meter
             self.inner_rect.left = self.inner_rect_left
-            self.meter -= 0.001 + score.score*0.001 if self.meter > 0 else 0
+            self.meter -= 0.001 + score*0.001 if self.meter > 0 else 0
 
             if self.meter <= 0:
                 pygame.time.set_timer(GAME_OVER, 1, True)
@@ -163,7 +159,6 @@ text = Text()
 text.set_text("Arrow Rush")
 play_button = PlayButton()
 arrows = Arrows()
-score = Score()
 time_meter = TimeMeter()
 
 arrows.refresh_arrow()
