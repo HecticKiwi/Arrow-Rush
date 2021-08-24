@@ -64,7 +64,7 @@ class PlayButton(pygame.sprite.Sprite):
 
             screen.blit(self.new_image, self.new_rect)
 
-class Arrows():
+class Arrows(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.directions = [
@@ -103,10 +103,18 @@ class Arrows():
         
             self.new_arrow()
 
-class Score():
+class Score(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.score = 0
+
+class time_meter(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.meter = 1
+
+    def update(self):
+        pygame.draw.rect(background, BLACK, [])
 
 clock = pygame.time.Clock()
 
