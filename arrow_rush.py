@@ -19,15 +19,15 @@ background = pygame.image.load("data\\" + "background.jpg")
 
 score = 0
 
-
 class Text(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, text="null", size=50, center=(0,0), wobble=False):
         super().__init__()
 
-        self.font = pygame.font.SysFont("comicsansms", 50)
-        self.original = self.font.render("Arrow Rush", True, BLACK)
+        self.font = pygame.font.SysFont("comicsansms", size)
         self.theta = 0
         self.visible = True
+        self.original = self.font.render(text, True, BLACK)
+        self.center = center
 
     def update(self):
         if self.visible == True:
@@ -35,14 +35,9 @@ class Text(pygame.sprite.Sprite):
 
             self.image = pygame.transform.rotate(
                 self.original, math.sin(self.theta) * 5)
-            self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT/4))
+            self.rect = self.image.get_rect(center=self.center)
 
             screen.blit(self.image, self.rect)
-    
-    def set_text(self, text):
-        self.original = self.font.render(text, True, BLACK)
-
-
 
 class PlayButton(pygame.sprite.Sprite):
     def __init__(self):
@@ -155,8 +150,10 @@ class TimeMeter(pygame.sprite.Sprite):
 
 clock = pygame.time.Clock()
 
-text = Text()
-text.set_text("Arrow Rush")
+title = Text("Arrow Rush", size=50, center=(WIDTH/2, HEIGHT/4))
+
+text_sprites = pygame.sprite.Group(title)
+
 play_button = PlayButton()
 arrows = Arrows()
 time_meter = TimeMeter()
@@ -172,22 +169,20 @@ while running:
         if event.type == MOUSEBUTTONDOWN:
             if play_button.is_selected() and play_button.visible == True:
                 play_button.visible = False
-                text.visible = False
+                title.visible = False
                 arrows.visible = True
                 time_meter.visible = True
                 game_active = True
         if event.type == KEYDOWN and game_active == True:
             arrows.test_input(event.key)
         if event.type == GAME_OVER:
-            text.set_text("Game over...")
-            text.visible = True
 
             arrows.visible = False
             time_meter.visible = False
 
     screen.blit(background, (0, 0))
 
-    text.update()
+    text_sprites.update()
     play_button.update()
     arrows.update()
     time_meter.update()
