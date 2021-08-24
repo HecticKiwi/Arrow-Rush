@@ -20,24 +20,31 @@ background = pygame.image.load("data\\" + "background.jpg")
 score = 0
 
 class Text(pygame.sprite.Sprite):
-    def __init__(self, text="null", size=50, center=(0,0), wobble=False):
+    def __init__(self, text="null", size=50, center=(0,0), wobble=False, visible=True):
         super().__init__()
 
         self.font = pygame.font.SysFont("comicsansms", size)
         self.theta = 0
-        self.visible = True
+        self.visible = visible
         self.original = self.font.render(text, True, BLACK)
+        self.image = self.original.copy()
         self.center = center
+        self.wobble = wobble
 
     def update(self):
         if self.visible == True:
-            self.theta += 0.05
+            if self.wobble:
+                self.theta += 0.05
+                self.image = pygame.transform.rotate(
+                    self.original, math.sin(self.theta) * 5)
 
-            self.image = pygame.transform.rotate(
-                self.original, math.sin(self.theta) * 5)
             self.rect = self.image.get_rect(center=self.center)
 
             screen.blit(self.image, self.rect)
+
+    def set_text(self, text):
+        self.original = self.font.render(text, True, BLACK)
+        self.image = self.original.copy()
 
 class PlayButton(pygame.sprite.Sprite):
     def __init__(self):
@@ -116,6 +123,7 @@ class Arrows(pygame.sprite.Sprite):
             score += 1
             print(score)
             self.refresh_arrow()
+            score_text.set_text(f"Score: {score}")
             time_meter.meter = 1
 
 
@@ -150,9 +158,10 @@ class TimeMeter(pygame.sprite.Sprite):
 
 clock = pygame.time.Clock()
 
-title = Text("Arrow Rush", size=50, center=(WIDTH/2, HEIGHT/4))
+title = Text("Arrow Rush", size=50, center=(WIDTH/2, HEIGHT/4), wobble=False, visible=True)
+score_text = Text(f"Score: {score}", size=35, center=(WIDTH/2, HEIGHT/2), wobble=False, visible=False)
 
-text_sprites = pygame.sprite.Group(title)
+text_sprites = pygame.sprite.Group(title, score_text)
 
 play_button = PlayButton()
 arrows = Arrows()
@@ -172,6 +181,7 @@ while running:
                 title.visible = False
                 arrows.visible = True
                 time_meter.visible = True
+                score_text.visible = True
                 game_active = True
         if event.type == KEYDOWN and game_active == True:
             arrows.test_input(event.key)
