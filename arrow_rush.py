@@ -1,19 +1,19 @@
+import math, random
 
-import math
-import random
 import pygame
 from pygame.locals import *
 
+FPS = 60
 WIDTH = 480
 HEIGHT = 360
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GAME_OVER = USEREVENT + 1
 
-game_active = False
 pygame.init()
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Arrow Rush")
 background = pygame.image.load("data\\" + "background.jpg")
 
 score = 0
@@ -24,33 +24,30 @@ class Text(pygame.sprite.Sprite):
 
         self.font = pygame.font.SysFont("comicsansms", size)
         self.theta = 0
-        self.visible = visible
-        self.original = self.font.render(text, True, BLACK)
-        self.image = self.original.copy()
         self.center = center
         self.wobble = wobble
+        self.visible = visible
+        self.set_text(text)
 
     def update(self):
-        if self.visible == True:
+        if self.visible:
             if self.wobble:
                 self.theta += 0.05
-                self.image = pygame.transform.rotate(
-                    self.original, math.sin(self.theta) * 5)
-
-            self.rect = self.image.get_rect(center=self.center)
+                self.image = pygame.transform.rotate(self.original, math.sin(self.theta) * 5)
+                self.rect = self.image.get_rect(center=self.center)
 
             screen.blit(self.image, self.rect)
 
     def set_text(self, text):
         self.original = self.font.render(text, True, BLACK)
-        self.image = self.original.copy()
+        self.image, self.rect = self.original.copy(), self.original.get_rect(center=self.center)
 
 class Button(pygame.sprite.Sprite):
     def __init__(self, file, center=(0,0), visible=True):
         super().__init__()
 
-        self.image = pygame.image.load("data\\" + file)
         self.center = center
+        self.image = pygame.image.load("data\\" + file)
         self.rect = self.image.get_rect(center=self.center)
         self.width, self.height = self.rect.width, self.rect.height
         self.mask = pygame.mask.from_surface(self.image)
@@ -64,7 +61,7 @@ class Button(pygame.sprite.Sprite):
         return self.rect.collidepoint((x, y)) and self.mask.get_at(pos_in_mask)
 
     def update(self):
-        if self.visible == True:
+        if self.visible:
             if self.is_selected():
                 self.brightness += 3 if self.brightness < self.brightness_cap else 0
                 self.size += (self.size_cap - self.size) / 5
@@ -146,9 +143,7 @@ class TimeMeter(pygame.sprite.Sprite):
 
     def update(self):
         if self.visible:
-            global score
             self.inner_rect.width = 390 * self.meter
-            self.inner_rect.left = self.inner_rect_left
             self.meter -= 0.001 + score*0.001 if self.meter > 0 else 0
 
             if self.meter <= 0:
@@ -160,22 +155,20 @@ class TimeMeter(pygame.sprite.Sprite):
 
 clock = pygame.time.Clock()
 
-title = Text("Arrow Rush", size=50, center=(WIDTH/2, HEIGHT/4), wobble=True, visible=True)
+title_text = Text("Arrow Rush", size=50, center=(WIDTH/2, HEIGHT/4), wobble=True, visible=True)
 score_text = Text(f"Score: {score}", size=35, center=(WIDTH/2, HEIGHT/2), wobble=False, visible=False)
 game_over_text = Text("Game Over...", size=50, center=(WIDTH/2, HEIGHT/4), wobble=True, visible=False)
-
-text_sprites = pygame.sprite.Group(title, score_text, game_over_text)
+text_sprites = pygame.sprite.Group(title_text, score_text, game_over_text)
 
 play_button = Button("play_button.png", center=(WIDTH/2, HEIGHT*3/4), visible=True)
 retry_button = Button("retry_button.png", center=(WIDTH/2, HEIGHT*3/4), visible=False)
-
 button_sprites = pygame.sprite.Group(play_button, retry_button)
 
 arrows = Arrows()
+arrows.refresh_arrow()
 time_meter = TimeMeter()
 
-arrows.refresh_arrow()
-
+game_active = False
 running = True
 
 while running:
@@ -183,23 +176,24 @@ while running:
         if event.type == QUIT:
             running = False
         if event.type == MOUSEBUTTONDOWN:
-            if play_button.is_selected() and play_button.visible == True:
+            if play_button.is_selected() and play_button.visible:
                 play_button.visible = False
-                title.visible = False
+                title_text.visible = False
+
                 arrows.visible = True
                 time_meter.visible = True
                 game_active = True
-            elif retry_button.is_selected() and retry_button.visible == True:
+            elif retry_button.is_selected() and retry_button.visible:
                 retry_button.visible = False
-                arrows.visible = True
+                game_over_text.visible = False
+                score_text.visible = False
+
                 score = 0
                 time_meter.meter = 1
                 time_meter.visible = True
+                arrows.visible = True
                 game_active = True
-
-                game_over_text.visible = False
-                score_text.visible = False
-        if event.type == KEYDOWN and game_active == True:
+        if event.type == KEYDOWN and game_active:
             arrows.handle_input(event.key)
         if event.type == GAME_OVER:
             arrows.visible = False
@@ -218,4 +212,4 @@ while running:
     time_meter.update()
 
     pygame.display.update()
-    clock.tick(60)
+    clock.tick(FPS)
