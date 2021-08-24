@@ -1,5 +1,4 @@
 import math, random
-
 import pygame
 from pygame.locals import *
 
@@ -116,6 +115,7 @@ class Arrows(pygame.sprite.Sprite):
 
     def handle_input(self, key):
         if self.direction == key:
+            arrow_push.play()
             global score
             score += 1
             print(score)
@@ -155,6 +155,13 @@ class TimeMeter(pygame.sprite.Sprite):
 
 clock = pygame.time.Clock()
 
+button_push = pygame.mixer.Sound("data\\" + "button_push.mp3")
+arrow_push = pygame.mixer.Sound("data\\" + "arrow_push.mp3")
+crowd_aww = pygame.mixer.Sound("data\\" + "crowd_aww.wav")
+bgm = pygame.mixer.Sound("data\\" + "bgm.mp3")
+bgm.play(-1)
+
+
 title_text = Text("Arrow Rush", size=50, center=(WIDTH/2, HEIGHT/4), wobble=True, visible=True)
 score_text = Text(f"Score: {score}", size=35, center=(WIDTH/2, HEIGHT/2), wobble=False, visible=False)
 game_over_text = Text("Game Over...", size=50, center=(WIDTH/2, HEIGHT/4), wobble=True, visible=False)
@@ -177,6 +184,7 @@ while running:
             running = False
         if event.type == MOUSEBUTTONDOWN:
             if play_button.is_selected() and play_button.visible:
+                button_push.play()
                 play_button.visible = False
                 title_text.visible = False
 
@@ -184,6 +192,7 @@ while running:
                 time_meter.visible = True
                 game_active = True
             elif retry_button.is_selected() and retry_button.visible:
+                button_push.play()
                 retry_button.visible = False
                 game_over_text.visible = False
                 score_text.visible = False
@@ -196,6 +205,7 @@ while running:
         if event.type == KEYDOWN and game_active:
             arrows.handle_input(event.key)
         if event.type == GAME_OVER:
+            crowd_aww.play()
             arrows.visible = False
             time_meter.visible = False
             game_active = False
