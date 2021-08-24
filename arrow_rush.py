@@ -1,10 +1,12 @@
-import math
+import math, random
 import pygame
 from pygame.locals import *
 
 WIDTH = 480
 HEIGHT = 360
 BLACK = (0, 0, 0)
+
+game_active = False
 
 pygame.init()
 
@@ -17,28 +19,29 @@ class Title(pygame.sprite.Sprite):
         
         self.font = pygame.font.SysFont("comicsansms", 50)
         self.original = self.font.render("Arrow Rush", True, BLACK)
-
         self.theta = 0
+        self.visible = True
 
     def update(self):
-        self.theta += 0.05
+        if self.visible == True:
+            self.theta += 0.05
 
-        self.image = pygame.transform.rotate(self.original, math.sin(self.theta) * 5)
-        self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT/4))
+            self.image = pygame.transform.rotate(self.original, math.sin(self.theta) * 5)
+            self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT/4))
 
-        screen.blit(self.image, self.rect)
+            screen.blit(self.image, self.rect)
 
 class PlayButton(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
+
         self.image = pygame.image.load("data\\" + "play_button.png")
         self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT*3/4))
         self.width, self.height = self.rect.width, self.rect.height
         self.mask = pygame.mask.from_surface(self.image)
-        self.brightness = 0
-        self.brightness_cap = 25
-        self.size = 1
-        self.size_cap = 1.05
+        self.brightness, self.brightness_cap = 0, 25
+        self.size, self.size_cap = 1, 1.05
+        self.visible = True
 
     def is_selected(self) -> bool:
         x, y = pygame.mouse.get_pos()
@@ -46,29 +49,47 @@ class PlayButton(pygame.sprite.Sprite):
         return self.rect.collidepoint((x, y)) and self.mask.get_at(pos_in_mask)
 
     def update(self):
-        if self.is_selected():
-            self.brightness += 3 if self.brightness < self.brightness_cap else 0
-            self.size += (self.size_cap - self.size) / 5
+        if self.visible == True:
+            if self.is_selected():
+                self.brightness += 3 if self.brightness < self.brightness_cap else 0
+                self.size += (self.size_cap - self.size) / 5
+            else:
+                self.brightness -= 3 if self.brightness > 0 else 0
+                self.size += (1 - self.size) / 5
+
+            self.new_image = self.image.copy()
+            self.new_image = pygame.transform.smoothscale(self.new_image, (round(self.width*self.size), round(self.height*self.size)))
+            self.new_image.fill(tuple(num + self.brightness for num in BLACK), special_flags=BLEND_RGB_ADD)
+            self.new_rect = self.new_image.get_rect(center=(WIDTH/2, HEIGHT*3/4))
+
+            screen.blit(self.new_image, self.new_rect)
+
+class Arrows():
+    def __init__(self):
+        super().__init__()
+
+    def new_arrow(self):
+        self.color = "red" if random.randrange(1,3) == 1 else "black"
+
+        if self.color == "black":
+            self.image = pygame.image.load("data\\" + "arrow.png")
         else:
-            self.brightness -= 3 if self.brightness > 0 else 0
-            self.size += (1 - self.size) / 5
+            self.image = pygame.image.load("data\\" + "red_arrow.png")
+        
+        self.rotation = []
 
-        self.new_image = self.image.copy()
-        self.new_image = pygame.transform.smoothscale(self.new_image, (round(self.width*self.size), round(self.height*self.size)))
-        self.new_image.fill(tuple(num + self.brightness for num in BLACK), special_flags=BLEND_RGB_ADD)
+        self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT/2))
 
-        self.new_rect = self.new_image.get_rect(center=(WIDTH/2, HEIGHT*3/4))
-
-        screen.blit(self.new_image, self.new_rect)
-
-    def play(self):
-        pass
-
+    def update(self):
+        screen.blit(self.image, self.rect)
 
 clock = pygame.time.Clock()
 
 title = Title()
 play_button = PlayButton()
+arrows = Arrows()
+
+arrows.new_arrow()
 
 running = True
 
@@ -77,13 +98,20 @@ while running:
         if event.type == QUIT:
             running = False
         if event.type == MOUSEBUTTONDOWN:
-            if play_button.is_selected():
-                play_button.play()
+            if play_button.is_selected() and play_button.visible == True:
+                play_button.visible = False
+                title.visible = False
+
+                game_active = True
+
+    if game_active == True:
+        pass
 
     screen.blit(background, (0,0))
     
     title.update()
     play_button.update()
+    arrows.update()
 
     pygame.display.update()
     clock.tick(60)
