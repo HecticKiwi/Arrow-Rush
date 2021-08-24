@@ -1,5 +1,5 @@
 # Arrow-Rush
-My first attempt at coding a game :3
+My first attempt at coding a game (uses pygame) :3
 
 Just press the arrow key corresponding to the one shown on the screen.
 However, if the arrow is red then you must press in the opposite direction!
