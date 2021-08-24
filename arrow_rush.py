@@ -78,7 +78,6 @@ class Button(pygame.sprite.Sprite):
 
             screen.blit(self.new_image, self.new_rect)
 
-
 class Arrows(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -125,7 +124,6 @@ class Arrows(pygame.sprite.Sprite):
         else:
             time_meter.meter -= 0.3 if time_meter.meter > 0.3 else time_meter.meter
 
-
 class TimeMeter(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -152,7 +150,6 @@ class TimeMeter(pygame.sprite.Sprite):
             pygame.draw.rect(screen, BLACK, self.rect, border_radius=5)
             pygame.draw.rect(screen, RED, self.inner_rect, border_radius=5)
 
-
 clock = pygame.time.Clock()
 
 button_push = pygame.mixer.Sound("data\\" + "button_push.mp3")
@@ -160,7 +157,6 @@ arrow_push = pygame.mixer.Sound("data\\" + "arrow_push.mp3")
 crowd_aww = pygame.mixer.Sound("data\\" + "crowd_aww.wav")
 bgm = pygame.mixer.Sound("data\\" + "bgm.mp3")
 bgm.play(-1)
-
 
 title_text = Text("Arrow Rush", size=50, center=(WIDTH/2, HEIGHT/4), wobble=True, visible=True)
 score_text = Text(f"Score: {score}", size=35, center=(WIDTH/2, HEIGHT/2), wobble=False, visible=False)
