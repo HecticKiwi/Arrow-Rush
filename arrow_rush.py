@@ -67,27 +67,53 @@ class PlayButton(pygame.sprite.Sprite):
 class Arrows():
     def __init__(self):
         super().__init__()
+        self.directions = [
+            K_UP,
+            K_DOWN,
+            K_LEFT,
+            K_RIGHT
+        ]
+        self.rotations = {
+            K_UP: 90,
+            K_DOWN: -90,
+            K_LEFT: 180,
+            K_RIGHT: 0
+        }
+
 
     def new_arrow(self):
-        self.color = "red" if random.randrange(1,3) == 1 else "black"
+        self.color = "red" if random.randrange(0,3) == 1 else "black"
 
         if self.color == "black":
             self.image = pygame.image.load("data\\" + "arrow.png")
         else:
             self.image = pygame.image.load("data\\" + "red_arrow.png")
         
-        self.rotation = []
-
+        self.direction = self.directions[random.randrange(0, 4)]
+        self.image = pygame.transform.rotate(self.image, self.rotations[self.direction] if self.color == "black" else self.rotations[self.direction] + 180)
         self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT/2))
 
     def update(self):
         screen.blit(self.image, self.rect)
+
+    def test_input(self, key):
+        if self.direction == key:
+            score.score += 1
+            print(score.score)
+        
+            self.new_arrow()
+
+class Score():
+    def __init__(self):
+        super().__init__()
+        self.score = 0
 
 clock = pygame.time.Clock()
 
 title = Title()
 play_button = PlayButton()
 arrows = Arrows()
+score = Score()
 
 arrows.new_arrow()
 
@@ -103,9 +129,8 @@ while running:
                 title.visible = False
 
                 game_active = True
-
-    if game_active == True:
-        pass
+        if event.type == KEYDOWN and game_active == True:
+            arrows.test_input(event.key)
 
     screen.blit(background, (0,0))
     
