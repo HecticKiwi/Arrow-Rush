@@ -5,6 +5,7 @@ from pygame.locals import *
 WIDTH = 480
 HEIGHT = 360
 BLACK = (0, 0, 0)
+RED = (255, 0, 0)
 
 game_active = False
 
@@ -108,13 +109,29 @@ class Score(pygame.sprite.Sprite):
         super().__init__()
         self.score = 0
 
-class time_meter(pygame.sprite.Sprite):
+class TimeMeter(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.meter = 1
 
+        self.rect = pygame.Rect([0,0,0,0])
+        self.rect.width = 400
+        self.rect.height = 50
+        self.rect.center = (WIDTH / 2, HEIGHT * 4 / 5)
+
+        self.inner_rect = self.rect.copy()
+        self.inner_rect = self.inner_rect.inflate(-10, -10)
+        self.inner_rect_left = self.inner_rect.left
+
     def update(self):
-        pygame.draw.rect(background, BLACK, [])
+        self.inner_rect.width = 390 * self.meter
+        self.inner_rect.left = self.inner_rect_left
+        self.meter -= 0.001 if self.meter > 0 else 0
+
+        pygame.draw.rect(background, BLACK, self.rect, border_radius=5)
+        pygame.draw.rect(background, RED, self.inner_rect, border_radius=5)
+
+
 
 clock = pygame.time.Clock()
 
@@ -122,6 +139,7 @@ title = Title()
 play_button = PlayButton()
 arrows = Arrows()
 score = Score()
+time_meter = TimeMeter()
 
 arrows.new_arrow()
 
@@ -145,6 +163,7 @@ while running:
     title.update()
     play_button.update()
     arrows.update()
+    time_meter.update()
 
     pygame.display.update()
     clock.tick(60)
