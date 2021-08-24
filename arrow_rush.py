@@ -1,4 +1,6 @@
-import math, random
+
+import math
+import random
 import pygame
 from pygame.locals import *
 
@@ -14,10 +16,11 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 background = pygame.image.load("data\\" + "background.jpg")
 
+
 class Title(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        
+
         self.font = pygame.font.SysFont("comicsansms", 50)
         self.original = self.font.render("Arrow Rush", True, BLACK)
         self.theta = 0
@@ -27,10 +30,12 @@ class Title(pygame.sprite.Sprite):
         if self.visible == True:
             self.theta += 0.05
 
-            self.image = pygame.transform.rotate(self.original, math.sin(self.theta) * 5)
+            self.image = pygame.transform.rotate(
+                self.original, math.sin(self.theta) * 5)
             self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT/4))
 
             screen.blit(self.image, self.rect)
+
 
 class PlayButton(pygame.sprite.Sprite):
     def __init__(self):
@@ -59,11 +64,15 @@ class PlayButton(pygame.sprite.Sprite):
                 self.size += (1 - self.size) / 5
 
             self.new_image = self.image.copy()
-            self.new_image = pygame.transform.smoothscale(self.new_image, (round(self.width*self.size), round(self.height*self.size)))
-            self.new_image.fill(tuple(num + self.brightness for num in BLACK), special_flags=BLEND_RGB_ADD)
-            self.new_rect = self.new_image.get_rect(center=(WIDTH/2, HEIGHT*3/4))
+            self.new_image = pygame.transform.smoothscale(
+                self.new_image, (round(self.width*self.size), round(self.height*self.size)))
+            self.new_image.fill(
+                tuple(num + self.brightness for num in BLACK), special_flags=BLEND_RGB_ADD)
+            self.new_rect = self.new_image.get_rect(
+                center=(WIDTH/2, HEIGHT*3/4))
 
             screen.blit(self.new_image, self.new_rect)
+
 
 class Arrows(pygame.sprite.Sprite):
     def __init__(self):
@@ -81,17 +90,17 @@ class Arrows(pygame.sprite.Sprite):
             K_RIGHT: 0
         }
 
-
     def new_arrow(self):
-        self.color = "red" if random.randrange(0,3) == 1 else "black"
+        self.color = "red" if random.randrange(0, 3) == 1 else "black"
 
         if self.color == "black":
             self.image = pygame.image.load("data\\" + "arrow.png")
         else:
             self.image = pygame.image.load("data\\" + "red_arrow.png")
-        
+
         self.direction = self.directions[random.randrange(0, 4)]
-        self.image = pygame.transform.rotate(self.image, self.rotations[self.direction] if self.color == "black" else self.rotations[self.direction] + 180)
+        self.image = pygame.transform.rotate(
+            self.image, self.rotations[self.direction] if self.color == "black" else self.rotations[self.direction] + 180)
         self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT/2))
 
     def update(self):
@@ -101,20 +110,22 @@ class Arrows(pygame.sprite.Sprite):
         if self.direction == key:
             score.score += 1
             print(score.score)
-        
+
             self.new_arrow()
+
 
 class Score(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.score = 0
 
+
 class TimeMeter(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.meter = 1
 
-        self.rect = pygame.Rect([0,0,0,0])
+        self.rect = pygame.Rect([0, 0, 0, 0])
         self.rect.width = 400
         self.rect.height = 50
         self.rect.center = (WIDTH / 2, HEIGHT * 4 / 5)
@@ -130,7 +141,6 @@ class TimeMeter(pygame.sprite.Sprite):
 
         pygame.draw.rect(background, BLACK, self.rect, border_radius=5)
         pygame.draw.rect(background, RED, self.inner_rect, border_radius=5)
-
 
 
 clock = pygame.time.Clock()
@@ -158,8 +168,8 @@ while running:
         if event.type == KEYDOWN and game_active == True:
             arrows.test_input(event.key)
 
-    screen.blit(background, (0,0))
-    
+    screen.blit(background, (0, 0))
+
     title.update()
     play_button.update()
     arrows.update()
