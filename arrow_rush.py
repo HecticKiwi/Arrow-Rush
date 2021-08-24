@@ -2,12 +2,14 @@
 import math
 import random
 import pygame
+from pygame import time
 from pygame.locals import *
 
 WIDTH = 480
 HEIGHT = 360
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
+GAME_OVER = USEREVENT + 1
 
 game_active = False
 
@@ -17,7 +19,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 background = pygame.image.load("data\\" + "background.jpg")
 
 
-class Title(pygame.sprite.Sprite):
+class Text(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
 
@@ -35,6 +37,10 @@ class Title(pygame.sprite.Sprite):
             self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT/4))
 
             screen.blit(self.image, self.rect)
+    
+    def set_text(self, text):
+        self.original = self.font.render(text, True, BLACK)
+
 
 
 class PlayButton(pygame.sprite.Sprite):
@@ -89,8 +95,9 @@ class Arrows(pygame.sprite.Sprite):
             K_LEFT: 180,
             K_RIGHT: 0
         }
+        self.visible = False
 
-    def new_arrow(self):
+    def refresh_arrow(self):
         self.color = "red" if random.randrange(0, 3) == 1 else "black"
 
         if self.color == "black":
@@ -104,14 +111,16 @@ class Arrows(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(WIDTH/2, HEIGHT/2))
 
     def update(self):
-        screen.blit(self.image, self.rect)
+        if self.visible:
+            screen.blit(self.image, self.rect)
 
     def test_input(self, key):
         if self.direction == key:
             score.score += 1
             print(score.score)
 
-            self.new_arrow()
+            self.refresh_arrow()
+            time_meter.meter = 1
 
 
 class Score(pygame.sprite.Sprite):
@@ -124,6 +133,7 @@ class TimeMeter(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.meter = 1
+        self.visible = False
 
         self.rect = pygame.Rect([0, 0, 0, 0])
         self.rect.width = 400
@@ -135,23 +145,28 @@ class TimeMeter(pygame.sprite.Sprite):
         self.inner_rect_left = self.inner_rect.left
 
     def update(self):
-        self.inner_rect.width = 390 * self.meter
-        self.inner_rect.left = self.inner_rect_left
-        self.meter -= 0.001 if self.meter > 0 else 0
+        if self.visible:
+            self.inner_rect.width = 390 * self.meter
+            self.inner_rect.left = self.inner_rect_left
+            self.meter -= 0.001 + score.score*0.001 if self.meter > 0 else 0
 
-        pygame.draw.rect(background, BLACK, self.rect, border_radius=5)
-        pygame.draw.rect(background, RED, self.inner_rect, border_radius=5)
+            if self.meter <= 0:
+                pygame.time.set_timer(GAME_OVER, 1, True)
+
+            pygame.draw.rect(screen, BLACK, self.rect, border_radius=5)
+            pygame.draw.rect(screen, RED, self.inner_rect, border_radius=5)
 
 
 clock = pygame.time.Clock()
 
-title = Title()
+text = Text()
+text.set_text("Arrow Rush")
 play_button = PlayButton()
 arrows = Arrows()
 score = Score()
 time_meter = TimeMeter()
 
-arrows.new_arrow()
+arrows.refresh_arrow()
 
 running = True
 
@@ -162,15 +177,22 @@ while running:
         if event.type == MOUSEBUTTONDOWN:
             if play_button.is_selected() and play_button.visible == True:
                 play_button.visible = False
-                title.visible = False
-
+                text.visible = False
+                arrows.visible = True
+                time_meter.visible = True
                 game_active = True
         if event.type == KEYDOWN and game_active == True:
             arrows.test_input(event.key)
+        if event.type == GAME_OVER:
+            text.set_text("Game over...")
+            text.visible = True
+
+            arrows.visible = False
+            time_meter.visible = False
 
     screen.blit(background, (0, 0))
 
-    title.update()
+    text.update()
     play_button.update()
     arrows.update()
     time_meter.update()
